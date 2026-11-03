@@ -3,7 +3,7 @@
 :root {
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
   color: #e9d8d0;
-  background: #090708;
+  background: #240912;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -11,13 +11,13 @@
   font-optical-sizing: auto;
   font-weight: 400;
 
-  --noir: #090708;
-  --wine: #321018;
+  --noir: #240912;
+  --wine: #4a1423;
   --red: #a52a3a;
   --ivory: #e9d8d0;
   --muted: #a79791;
-  --line: rgba(233, 216, 208, 0.14);
-  --surface: #120e10;
+  --line: rgba(233, 216, 208, 0.18);
+  --surface: #35101d;
   --serif: 'Playfair Display', Georgia, serif;
 }
 

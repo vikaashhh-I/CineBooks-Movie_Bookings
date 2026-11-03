@@ -2,8 +2,15 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API = "http://localhost:8080/api";
+const API = "https://x4p4zg0k-8080.inc1.devtunnels.ms/api";
 const SHOW_FORMATS = ["2D", "3D", "IMAX"];
+const MOVIE_POSTERS = {
+  Interstellar: "https://upload.wikimedia.org/wikipedia/en/b/bc/Interstellar_film_poster.jpg",
+  Inception: "https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_%282010%29_theatrical_poster.jpg",
+  Vikram: "https://upload.wikimedia.org/wikipedia/en/9/93/Vikram_2022_poster.jpg",
+  Leo: "https://upload.wikimedia.org/wikipedia/en/7/75/Leo_%282023_Indian_film%29.jpg",
+  "Avengers Endgame": "https://upload.wikimedia.org/wikipedia/en/0/0d/Avengers_Endgame_poster.jpg"
+};
 
 function getNextShowDates() {
   const today = new Date();
@@ -135,6 +142,13 @@ function App() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [failedPosters, setFailedPosters] = useState({});
+
+  function getPosterUrl(movie) {
+    if (!movie || failedPosters[movie.title]) return null;
+    return movie.posterUrl || MOVIE_POSTERS[movie.title] || null;
+  }
 
   useEffect(() => {
     if (page !== "movies" || movies.length < 2) return undefined;
@@ -263,6 +277,7 @@ function App() {
   const currentFeaturedIndex = featuredMovie
     ? featuredMovieIndex % movies.length
     : 0;
+  const featuredPosterUrl = getPosterUrl(featuredMovie);
 
   async function openMovie(movie) {
     setSelectedMovie(movie);
@@ -492,14 +507,48 @@ function App() {
               required
             />
 
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={updateForm}
-              required
-            />
+            <div className="password-input-wrap">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                autoComplete={page === "login" ? "current-password" : "new-password"}
+                value={form.password}
+                onChange={updateForm}
+                required
+              />
+              <button
+                className="password-visibility-toggle"
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword(visible => !visible)}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {showPassword ? (
+                    <>
+                      <path d="M3 3l18 18" />
+                      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                      <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c5.2 0 8.6 4.7 9.5 6.2a1.5 1.5 0 0 1 0 1.6 13 13 0 0 1-3.1 3.5" />
+                      <path d="M6.2 6.2a13.6 13.6 0 0 0-3.7 5 1.5 1.5 0 0 0 0 1.6C3.4 14.3 6.8 19 12 19a10.8 10.8 0 0 0 3-.4" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M2.5 12s3.4-7 9.5-7 9.5 7 9.5 7-3.4 7-9.5 7-9.5-7-9.5-7Z" />
+                      <circle cx="12" cy="12" r="2.5" />
+                    </>
+                  )}
+                </svg>
+              </button>
+            </div>
 
             {error && <p className="error">{error}</p>}
 
@@ -544,7 +593,19 @@ function App() {
 
         {page === "movies" && (
           <>
-            <section className="hero">
+            <section className={`hero${featuredPosterUrl ? " has-featured-poster" : ""}`}>
+              {featuredPosterUrl && (
+                <div className="hero-featured-poster" key={featuredMovie.movieId}>
+                  <img
+                    src={featuredPosterUrl}
+                    alt={`${featuredMovie.title} movie poster`}
+                    onError={() => setFailedPosters(previous => ({
+                      ...previous,
+                      [featuredMovie.title]: true
+                    }))}
+                  />
+                </div>
+              )}
               <div
                 className="hero-copy"
                 key={featuredMovie?.movieId ?? "featured-movie-empty"}
@@ -571,33 +632,9 @@ function App() {
                 >
                   Explore showtimes
                 </button>
-                <div className="hero-featured-controls">
-                  <span className="hero-index">
-                    {String(currentFeaturedIndex + 1).padStart(2, "0")} / {String(movies.length).padStart(2, "0")} FEATURED FILM
-                  </span>
-                  {movies.length > 1 && (
-                    <div className="hero-slide-controls" aria-label="Featured movies">
-                      <button
-                        type="button"
-                        aria-label="Previous featured movie"
-                        onClick={() => setFeaturedMovieIndex(index =>
-                          (index - 1 + movies.length) % movies.length
-                        )}
-                      >
-                        ←
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Next featured movie"
-                        onClick={() => setFeaturedMovieIndex(index =>
-                          (index + 1) % movies.length
-                        )}
-                      >
-                        →
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <span className="hero-index">
+                  {String(currentFeaturedIndex + 1).padStart(2, "0")} / {String(movies.length).padStart(2, "0")} FEATURED FILM
+                </span>
               </div>
             </section>
 
@@ -613,34 +650,54 @@ function App() {
               <p>No movies available.</p>
             ) : (
               <div className="movie-grid">
-                {movies.map((movie, index) => (
-                  <div className="movie-card" key={movie.movieId}>
-                    <div className={`movie-poster poster-art-${index % 4}`}>
-                      <div className="poster-topline">
-                        <span>CineBooks selection</span>
-                        <span>{String(index + 1).padStart(2, "0")}</span>
+                {movies.map((movie, index) => {
+                  const posterUrl = getPosterUrl(movie);
+
+                  return (
+                    <div className="movie-card" key={movie.movieId}>
+                      <div className={`movie-poster poster-art-${index % 4}${posterUrl ? " has-poster" : ""}`}>
+                        {posterUrl ? (
+                          <img
+                            className="movie-poster-image"
+                            src={posterUrl}
+                            alt={`${movie.title} movie poster`}
+                            loading="lazy"
+                            decoding="async"
+                            onError={() => setFailedPosters(previous => ({
+                              ...previous,
+                              [movie.title]: true
+                            }))}
+                          />
+                        ) : (
+                          <>
+                            <div className="poster-topline">
+                              <span>CineBooks selection</span>
+                              <span>{String(index + 1).padStart(2, "0")}</span>
+                            </div>
+                            <div>
+                              <div className="poster-title">{movie.title}</div>
+                              <div className="poster-meta">
+                                {movie.genre || "Feature presentation"}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div>
-                        <div className="poster-title">{movie.title}</div>
-                        <div className="poster-meta">
-                          {movie.genre || "Feature presentation"}
-                        </div>
+                      <div className="movie-info">
+                        <h3>{movie.title}</h3>
+                        {movie.description && <p>{movie.description}</p>}
+                        <p>{movie.genre}</p>
+                        <p>{movie.language} · {movie.duration} min</p>
+                        <button
+                          className="primary-btn"
+                          onClick={() => openMovie(movie)}
+                        >
+                          Book Tickets
+                        </button>
                       </div>
                     </div>
-                    <div className="movie-info">
-                      <h3>{movie.title}</h3>
-                      {movie.description && <p>{movie.description}</p>}
-                      <p>{movie.genre}</p>
-                      <p>{movie.language} · {movie.duration} min</p>
-                      <button
-                        className="primary-btn"
-                        onClick={() => openMovie(movie)}
-                      >
-                        Book Tickets
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
@@ -929,29 +986,45 @@ function App() {
                   const seatNumbers = booking.seat_numbers
                     ? String(booking.seat_numbers).split(",")
                     : [];
+                  const posterUrl = getPosterUrl({ title: booking.title });
 
                   return (
-                    <div className="booking-card" key={booking.booking_id}>
-                      <h3>{booking.title}</h3>
-                      <p className="booking-format">
-                        {booking.language} · {booking.show_type}
-                      </p>
-                      <p>
-                        {formatBookingDate(booking.show_date)} |{" "}
-                        {formatBookingTime(booking.show_time)}
-                      </p>
-                      <p className="booking-theater">
-                        <strong>{booking.theater_name}</strong>
-                        <span>{booking.location}</span>
-                      </p>
-                      <p>No. of seats booked: {seatNumbers.length}</p>
-                      <p>Seat numbers: {seatNumbers.join(", ") || "—"}</p>
-                      <p className="booking-total">
-                        Total amount: ₹{Number(booking.total_amount).toFixed(2)}
-                      </p>
-                      <p className="booking-meta">
-                        Booking ID: #{booking.booking_id} · {booking.booking_status}
-                      </p>
+                    <div className={`booking-card${posterUrl ? " has-booking-poster" : ""}`} key={booking.booking_id}>
+                      {posterUrl && (
+                        <img
+                          className="booking-poster"
+                          src={posterUrl}
+                          alt={`${booking.title} movie poster`}
+                          loading="lazy"
+                          decoding="async"
+                          onError={() => setFailedPosters(previous => ({
+                            ...previous,
+                            [booking.title]: true
+                          }))}
+                        />
+                      )}
+                      <div className="booking-card-content">
+                        <h3>{booking.title}</h3>
+                        <p className="booking-format">
+                          {booking.language} · {booking.show_type}
+                        </p>
+                        <p>
+                          {formatBookingDate(booking.show_date)} |{" "}
+                          {formatBookingTime(booking.show_time)}
+                        </p>
+                        <p className="booking-theater">
+                          <strong>{booking.theater_name}</strong>
+                          <span>{booking.location}</span>
+                        </p>
+                        <p>No. of seats booked: {seatNumbers.length}</p>
+                        <p>Seat numbers: {seatNumbers.join(", ") || "—"}</p>
+                        <p className="booking-total">
+                          Total amount: ₹{Number(booking.total_amount).toFixed(2)}
+                        </p>
+                        <p className="booking-meta">
+                          Booking ID: #{booking.booking_id} · {booking.booking_status}
+                        </p>
+                      </div>
                     </div>
                   );
                 })}
