@@ -42,7 +42,8 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(List.of(
             "http://localhost:5173",
-            "https://x4p4zg0k-5173.inc1.devtunnels.ms"
+            "https://x4p4zg0k-5173.inc1.devtunnels.ms",
+            "https://cine-books-movie-bookings.vercel.app"
         ));
 
         configuration.setAllowedMethods(List.of(
