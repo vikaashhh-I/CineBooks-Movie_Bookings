@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API = "https://x4p4zg0k-8080.inc1.devtunnels.ms/api";
+const API = "https://cinebooks-movie-bookings.onrender.com/api";
 const SHOW_FORMATS = ["2D", "3D", "IMAX"];
 const MOVIE_POSTERS = {
   Interstellar: "https://upload.wikimedia.org/wikipedia/en/b/bc/Interstellar_film_poster.jpg",
