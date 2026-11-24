@@ -4,6 +4,7 @@ import com.moviebooking.model.Seat;
 import com.moviebooking.model.Showtime;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 
 @Repository
@@ -16,11 +17,25 @@ public class ShowtimeRepository {
     }
 
     public List<Showtime> getShowtimes(int movieId) {
+
+        String debugSql = """
+            SELECT DATABASE() AS db_name,
+                   CURDATE() AS db_date,
+                   COUNT(*) AS total
+            FROM showtimes
+            WHERE movie_id = ?
+            AND show_date >= CURDATE()
+            """;
+
+        System.out.println("SHOWTIME DEBUG: " +
+                jdbcTemplate.queryForMap(debugSql, movieId));
+
         String sql = """
             SELECT showtime_id, movie_id, theater_id, show_date,
                    show_time, show_type
             FROM showtimes
-            WHERE movie_id = ? AND show_date >= CURDATE()
+            WHERE movie_id = ?
+            AND show_date >= CURDATE()
             ORDER BY show_date, show_time
             """;
 
@@ -36,6 +51,7 @@ public class ShowtimeRepository {
     }
 
     public List<Seat> getSeats(int showtimeId) {
+
         String sql = """
             SELECT s.seat_id, s.theater_id, s.seat_number,
                    s.seat_type, s.price
